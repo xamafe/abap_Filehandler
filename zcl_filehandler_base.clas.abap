@@ -139,7 +139,7 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
 
 
   METHOD build_fullpath.
-*vollen Pfad zusammenbauen
+*build the full path
 
     CLEAR mv_fullpath.
     IF mv_name IS NOT INITIAL AND mv_extension IS NOT INITIAL.
@@ -150,7 +150,7 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
       mv_fullpath = mv_path.
     ENDIF.
 
-* Ersetzungen
+* automatic replacements
     replace_fullpath_variables( ).
 
   ENDMETHOD.                    "build_fullpath
@@ -236,7 +236,7 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
       lv_file LIKE mv_name,
       lv_pres TYPE abap_bool.
 
-* Suche den Dateinamen zusammen
+*   Build filename
     IF mv_name IS INITIAL AND mv_fullpath IS NOT INITIAL.
       split_fullpath( ).
       lv_file = mv_name.
@@ -249,7 +249,7 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
       lv_file = mv_name.
     ENDIF.
 
-* Wo sind wir?
+*   Where are we?
     IF mv_destination = zcl_filehandler_frontend=>mc_destination_frontend.
       lv_pres = abap_true.
     ENDIF.
@@ -279,23 +279,23 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
 
   METHOD move_file.
 
-* erstelle die neue Datei
+*   create the new file
     ro_file = create( iv_path        = iv_path
-    iv_destination = iv_destination    " Ziel des Datenstroms
-    ).
+                      iv_destination = iv_destination    " Ziel des Datenstroms
+                    ).
     IF ro_file IS NOT BOUND.
       RETURN.
     ENDIF.
 
-* übertrage die Daten
+*   move data
     ro_file->mt_content   = me->mt_content.
     ro_file->mv_filesize  = me->mv_filesize.   "Größe der gespeicherten Datei IN Bytes
     ro_file->mv_as_binary = me->mv_as_binary.  "wurde die Datei binär gelesen?
 
-* schreibe die Daten an die neue Position
+*   Write new file
     ro_file->write_file( iv_write_as_binary = ro_file->mv_as_binary ).
 
-* lösche die alte Datei
+*   Delete old file
     IF iv_copy_only = abap_false.
       me->delete_file( ).
     ENDIF.
@@ -307,15 +307,15 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
 
     DATA: lv_repl(3).
 
-* Sys-ID ... in allen Schreibweisen wegfangen ^^
+* Sys-ID ... replacement
     REPLACE ALL OCCURRENCES OF '<sys-id>' IN mv_fullpath WITH sy-sysid IGNORING CASE.
     REPLACE ALL OCCURRENCES OF '<sys-id>' IN mv_path WITH sy-sysid IGNORING CASE.
 
-* Env-ID ... Das macht schon Spaß
-    IF sy-sysid = 'C12' OR sy-sysid = 'PB5' OR sy-sysid = 'PX5'.
-      lv_repl = 'px5'.
+* Env-ID ... Just a sample
+    IF sy-sysid = 'DEV' OR sy-sysid = 'QS1' OR sy-sysid = 'QS2'.
+      lv_repl = 'development'.
     ELSE.
-      lv_repl = 'ex5'.
+      lv_repl = 'productive'.
     ENDIF.
 
     REPLACE ALL OCCURRENCES OF '<env-id>' IN mv_fullpath WITH lv_repl IGNORING CASE.
@@ -379,7 +379,7 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
 
     lv_regex = '(.*)' && lv_sep && '(.*)\.(.*)$'.
     CONDENSE lv_regex.
-* Alles auf einmal, wenn wir die richtige "normale" Form haben
+*   All at once, if in correct order
     FIND FIRST OCCURRENCE OF REGEX lv_regex IN mv_fullpath SUBMATCHES mv_path mv_name mv_extension.
     CHECK sy-subrc <> 0. "Im Fehlerfall Probieren wir noch was ... :)
 
@@ -388,15 +388,15 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
       lv_regex = '(.*)' && lv_sep && '(.*)'.
       CONDENSE lv_regex.
       FIND FIRST OCCURRENCE OF REGEX lv_regex IN mv_fullpath SUBMATCHES mv_path mv_name.
-      CHECK sy-subrc <> 0. "Im Fehlerfall Probieren wir noch was ... :)
+      CHECK sy-subrc <> 0.
     ELSEIF mv_fullpath CA '.'.
       CLEAR lv_regex.
       lv_regex = '(.*)\.(.*)$'.
       FIND FIRST OCCURRENCE OF REGEX lv_regex IN mv_fullpath SUBMATCHES mv_path.
-      CHECK sy-subrc <> 0. "Im Fehlerfall Probieren wir noch was ... :)
+      CHECK sy-subrc <> 0.
     ENDIF.
 
-* Alles andere kommt nachher
+*   We didnt find anything
     RAISE not_implemented.
 
   ENDMETHOD.                    "split_fullpath
