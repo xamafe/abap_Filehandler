@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_DTEL" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <DD04V>
+    <ROLLNAME>ZE_FILELENGTH</ROLLNAME>
+    <DDLANGUAGE>E</DDLANGUAGE>
+    <HEADLEN>19</HEADLEN>
+    <SCRLEN1>10</SCRLEN1>
+    <SCRLEN2>19</SCRLEN2>
+    <SCRLEN3>19</SCRLEN3>
+    <DDTEXT>filelength in bytes</DDTEXT>
+    <REPTEXT>filelength in bytes</REPTEXT>
+    <SCRTEXT_S>filelength</SCRTEXT_S>
+    <SCRTEXT_M>filelength in bytes</SCRTEXT_M>
+    <SCRTEXT_L>filelength in bytes</SCRTEXT_L>
+    <DTELMASTER>E</DTELMASTER>
+    <DATATYPE>DEC</DATATYPE>
+    <LENG>000020</LENG>
+    <OUTPUTLEN>000026</OUTPUTLEN>
+   </DD04V>
+  </asx:values>
+ </asx:abap>
+</abapGit>
