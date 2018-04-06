@@ -9,39 +9,44 @@ CREATE PUBLIC .
 
     INTERFACES zif_codepages_const .
 
-    ALIASES mc_codepage_iso8859_15 FOR zif_codepages_const~mc_codepage_iso8859_15 .
-    ALIASES mc_codepage_utf16_be   FOR zif_codepages_const~mc_codepage_utf16_be .
-    ALIASES mc_codepage_utf16_le   FOR zif_codepages_const~mc_codepage_utf16_le .
-    ALIASES mc_codepage_utf32_be   FOR zif_codepages_const~mc_codepage_utf32_be .
-    ALIASES mc_codepage_utf32_le   FOR zif_codepages_const~mc_codepage_utf32_le .
-    ALIASES mc_codepage_utf8       FOR zif_codepages_const~mc_codepage_utf8 .
+    ALIASES mc_codepage_big5        FOR zif_codepages_const~mc_codepage_big5.
+    ALIASES mc_codepage_ibm_ebcdic  FOR zif_codepages_const~mc_codepage_ibm_ebcdic.
+    ALIASES mc_codepage_iso8859_1   FOR zif_codepages_const~mc_codepage_iso8859_1.
+    ALIASES mc_codepage_iso8859_15  FOR zif_codepages_const~mc_codepage_iso8859_15.
+    ALIASES mc_codepage_shift_js    FOR zif_codepages_const~mc_codepage_shift_js.
+    ALIASES mc_codepage_us_ascii    FOR zif_codepages_const~mc_codepage_us_ascii.
+    ALIASES mc_codepage_utf16_be    FOR zif_codepages_const~mc_codepage_utf16_be.
+    ALIASES mc_codepage_utf16_le    FOR zif_codepages_const~mc_codepage_utf16_le.
+    ALIASES mc_codepage_utf32_be    FOR zif_codepages_const~mc_codepage_utf32_be.
+    ALIASES mc_codepage_utf32_le    FOR zif_codepages_const~mc_codepage_utf32_le.
+    ALIASES mc_codepage_utf8        FOR zif_codepages_const~mc_codepage_utf8.
+
 
     TYPE-POOLS abap .
 
     CONSTANTS mc_filename_replace TYPE dxfilename VALUE '<FILENAME>'. "#EC NOTEXT
-    CONSTANTS mc_filetype_dir TYPE filetype VALUE 'DIR'.    "#EC NOTEXT
-    CONSTANTS mc_filetype_file TYPE filetype VALUE 'FILE'.  "#EC NOTEXT
+    CONSTANTS mc_filetype_dir     TYPE filetype   VALUE 'DIR'       . "#EC NOTEXT
+    CONSTANTS mc_filetype_file    TYPE filetype   VALUE 'FILE'      . "#EC NOTEXT
 
-    DATA mt_content TYPE REF TO data .
-    DATA mv_as_binary TYPE flag READ-ONLY.
-    DATA mv_bom TYPE xfeld VALUE abap_true.               "#EC NOTEXT .
+    DATA mt_content     TYPE REF TO data .
+    DATA mv_as_binary   TYPE flag READ-ONLY.
+    DATA mv_bom         TYPE xfeld VALUE abap_true.
     DATA mv_destination TYPE ze_destination .
-    DATA mv_encoding TYPE abap_encoding VALUE mc_codepage_utf8. "#EC NOTEXT .
-    DATA mv_extension TYPE hcskw_file_extension .
-    DATA mv_filesize TYPE i. "N2_BYTES .
-    DATA mv_fullpath TYPE string .
-    DATA mv_name TYPE dxfilename .
-    DATA mv_path TYPE dirname_al11 .
+    DATA mv_encoding    TYPE abap_encoding VALUE mc_codepage_utf8.
+    DATA mv_extension   TYPE hcskw_file_extension .
+    DATA mv_filesize    TYPE i.
+    DATA mv_fullpath    TYPE string .
+    DATA mv_filename    TYPE dxfilename .
+    DATA mv_path        TYPE dirname_al11 .
 
-    METHODS build_fullpath .
     METHODS constructor
       IMPORTING
-        !iv_path TYPE string OPTIONAL
+        !iv_fullpath TYPE string OPTIONAL
       EXCEPTIONS
         not_implemented .
     CLASS-METHODS create
       IMPORTING
-        !iv_path        TYPE csequence
+        !iv_fullpath    TYPE csequence
         !iv_destination TYPE ze_destination
       RETURNING
         VALUE(ro_file)  TYPE REF TO zcl_filehandler_base .
@@ -66,19 +71,19 @@ CREATE PUBLIC .
     METHODS get_dir_content
           ABSTRACT
       IMPORTING
-        !iv_path                    TYPE csequence OPTIONAL
+        !iv_dirpath                 TYPE csequence OPTIONAL
         !iv_only_subdir             TYPE flag DEFAULT abap_false
         !iv_only_files              TYPE flag DEFAULT abap_false
         !iv_build_object            TYPE flag DEFAULT abap_false
         !iv_append_rettable         TYPE flag DEFAULT abap_false
       RETURNING
-        VALUE(rt_directory_content) TYPE ztt_basic_file_list
-      .
+        VALUE(rt_directory_content) TYPE ztt_basic_file_list.
     METHODS get_filesize
       IMPORTING
         !iv_in_binary      TYPE flag DEFAULT abap_true
       RETURNING
         VALUE(rv_filesize) TYPE int4 .
+    METHODS get_fullpath RETURNING VALUE(r_result) TYPE string.
     METHODS get_os
           ABSTRACT
       RETURNING
@@ -114,20 +119,26 @@ CREATE PUBLIC .
         not_supported .
     METHODS set_fullpath
       IMPORTING
-        !iv_path TYPE csequence OPTIONAL
+        !iv_fullpath TYPE csequence OPTIONAL
       EXCEPTIONS
         not_implemented .
-    METHODS split_fullpath
-      EXCEPTIONS
-        not_implemented .
+    METHODS set_path
+      IMPORTING
+        iv_path      TYPE dirname_al11
+        iv_filename  TYPE dxfilename
+        iv_extension TYPE hcskw_file_extension.
     METHODS write_file
           ABSTRACT
       IMPORTING
-        !iv_write_as_binary TYPE flag OPTIONAL
-        !iv_binsize         TYPE int4 OPTIONAL .
+        iv_write_as_binary TYPE flag OPTIONAL
+        iv_binsize         TYPE int4 OPTIONAL .
+
   PROTECTED SECTION.
-*"* protected components of class ZCL_BC_FILEHANDLER_BASE
-*"* do not include other source files here!!!
+    METHODS build_fullpath .
+
+    METHODS split_fullpath
+      EXCEPTIONS
+        not_implemented .
   PRIVATE SECTION.
 *"* private components of class ZCL_BC_FILEHANDLER_BASE
 *"* do not include other source files here!!!
@@ -135,17 +146,17 @@ ENDCLASS.
 
 
 
-CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
+CLASS zcl_filehandler_base IMPLEMENTATION.
 
 
   METHOD build_fullpath.
-*build the full path
+*   build the full path
 
     CLEAR mv_fullpath.
-    IF mv_name IS NOT INITIAL AND mv_extension IS NOT INITIAL.
-      mv_fullpath = mv_path && get_sep( ) && mv_name && '.' && mv_extension.
-    ELSEIF mv_name IS NOT INITIAL.
-      mv_fullpath = mv_path && get_sep( ) && mv_name.
+    IF mv_filename IS NOT INITIAL AND mv_extension IS NOT INITIAL.
+      mv_fullpath = mv_path && get_sep( ) && mv_filename && '.' && mv_extension.
+    ELSEIF mv_filename IS NOT INITIAL.
+      mv_fullpath = mv_path && get_sep( ) && mv_filename.
     ELSE.
       mv_fullpath = mv_path.
     ENDIF.
@@ -157,8 +168,8 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
 
 
   METHOD constructor.
-    IF iv_path IS NOT INITIAL.
-      set_fullpath( iv_path = iv_path ).
+    IF iv_fullpath IS NOT INITIAL.
+      set_fullpath( iv_fullpath = iv_fullpath ).
     ENDIF.
   ENDMETHOD.                    "CONSTRUCTOR
 
@@ -177,7 +188,7 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
 
     CREATE OBJECT ro_file TYPE (lv_class)
             EXPORTING
-              iv_path = iv_path.
+              iv_path = iv_fullpath.
 
   ENDMETHOD.                    "create
 
@@ -230,23 +241,28 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
   ENDMETHOD.                    "GET_FILESIZE
 
 
+  METHOD get_fullpath.
+    r_result = me->mv_fullpath.
+  ENDMETHOD.
+
+
   METHOD get_physical_path.
 
     DATA:
-      lv_file LIKE mv_name,
+      lv_file LIKE mv_filename,
       lv_pres TYPE abap_bool.
 
 *   Build filename
-    IF mv_name IS INITIAL AND mv_fullpath IS NOT INITIAL.
+    IF mv_filename IS INITIAL AND mv_fullpath IS NOT INITIAL.
       split_fullpath( ).
-      lv_file = mv_name.
+      lv_file = mv_filename.
     ENDIF.
 
-    IF mv_name IS INITIAL.
+    IF mv_filename IS INITIAL.
       lv_file = mc_filename_replace.
-      mv_name = mc_filename_replace.
+      mv_filename = mc_filename_replace.
     ELSE.
-      lv_file = mv_name.
+      lv_file = mv_filename.
     ENDIF.
 
 *   Where are we?
@@ -280,7 +296,7 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
   METHOD move_file.
 
 *   create the new file
-    ro_file = create( iv_path        = iv_path
+    ro_file = create( iv_fullpath        = iv_path
                       iv_destination = iv_destination    " Ziel des Datenstroms
                     ).
     IF ro_file IS NOT BOUND.
@@ -347,13 +363,13 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
 
 
   METHOD set_fullpath.
-    IF iv_path IS SUPPLIED.
-      mv_fullpath = iv_path.
-    ELSEIF mv_path IS  NOT INITIAL OR mv_name IS NOT INITIAL.
+    IF iv_fullpath IS SUPPLIED.
+      mv_fullpath = iv_fullpath.
+    ELSEIF mv_path IS  NOT INITIAL OR mv_filename IS NOT INITIAL.
       IF mv_extension IS INITIAL.
-        mv_fullpath = mv_path && get_sep( ) && mv_name.
+        mv_fullpath = mv_path && get_sep( ) && mv_filename.
       ELSE.
-        mv_fullpath = mv_path && get_sep( ) && mv_name && '.' && mv_extension.
+        mv_fullpath = mv_path && get_sep( ) && mv_filename && '.' && mv_extension.
       ENDIF.
     ELSE.
       RAISE not_implemented .
@@ -363,6 +379,15 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
 *  CHECK mv_fullpath IS NOT INITIAL.
 *  split_fullpath( ).
   ENDMETHOD.                    "SET_FULLPATH
+
+
+  METHOD set_path.
+    mv_path       = iv_path     .
+    mv_filename   = iv_filename .
+    mv_extension  = iv_extension.
+
+    set_fullpath( ).
+  ENDMETHOD.
 
 
   METHOD split_fullpath.
@@ -380,14 +405,14 @@ CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
     lv_regex = '(.*)' && lv_sep && '(.*)\.(.*)$'.
     CONDENSE lv_regex.
 *   All at once, if in correct order
-    FIND FIRST OCCURRENCE OF REGEX lv_regex IN mv_fullpath SUBMATCHES mv_path mv_name mv_extension.
+    FIND FIRST OCCURRENCE OF REGEX lv_regex IN mv_fullpath SUBMATCHES mv_path mv_filename mv_extension.
     CHECK sy-subrc <> 0. "Im Fehlerfall Probieren wir noch was ... :)
 
     IF mv_fullpath CA '\/'.
       CLEAR lv_regex.
       lv_regex = '(.*)' && lv_sep && '(.*)'.
       CONDENSE lv_regex.
-      FIND FIRST OCCURRENCE OF REGEX lv_regex IN mv_fullpath SUBMATCHES mv_path mv_name.
+      FIND FIRST OCCURRENCE OF REGEX lv_regex IN mv_fullpath SUBMATCHES mv_path mv_filename.
       CHECK sy-subrc <> 0.
     ELSEIF mv_fullpath CA '.'.
       CLEAR lv_regex.

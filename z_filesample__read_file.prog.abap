@@ -23,16 +23,14 @@ START-OF-SELECTION.
                                                    iv_backend  = p_sap ).
 
 * Read data to internal type
-  DATA(go_file_internal) = zcl_filehandler_base=>create( iv_path        = p_path
+  DATA(go_file_internal) = zcl_filehandler_base=>create( iv_fullpath    = p_path
                                                          iv_destination = gv_dest ).
   go_file_internal->read_file( ).
-  go_file_internal->split_fullpath( ).
 
 * Read data to object-external table
-  DATA(go_file_global_table) = zcl_filehandler_base=>create( iv_path         = p_path
-                                           iv_destination  = gv_dest ).
+  DATA(go_file_global_table) = zcl_filehandler_base=>create( iv_fullpath     = p_path
+                                                             iv_destination  = gv_dest ).
   GET REFERENCE OF gt_itab INTO go_file_global_table->mt_content.
   go_file_global_table->read_file( iv_read_as_binary = 'X' ).
-  go_file_global_table->split_fullpath( ).
 
   WRITE: / 'Done'.

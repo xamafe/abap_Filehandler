@@ -11,7 +11,7 @@ START-OF-SELECTION.
 * Get "file" object to set path
   DATA(go_file) = NEW zcl_filehandler_frontend( p_path ).
 * get list of files with references
-  DATA(gt_dir_gui) = go_file->get_dir_content( iv_path         = p_path
+  DATA(gt_dir_gui) = go_file->get_dir_content( iv_dirpath         = p_path
                                                iv_only_files   = abap_true
                                                iv_build_object = abap_true ).
 

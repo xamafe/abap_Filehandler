@@ -63,7 +63,7 @@ CLASS zcl_filehandler_frontend IMPLEMENTATION.
 * | [EXC!] NOT_IMPLEMENTED
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD constructor.
-    super->constructor( iv_path = iv_path ).
+    super->constructor( iv_fullpath = iv_path ).
     mv_destination = zcl_filehandler_frontend=>mc_destination_frontend.
   ENDMETHOD.
 
@@ -76,9 +76,9 @@ CLASS zcl_filehandler_frontend IMPLEMENTATION.
   METHOD delete_file.
 
 * no filepath? No file!
-    IF mv_fullpath IS INITIAL AND mv_name IS NOT INITIAL.
+    IF mv_fullpath IS INITIAL AND mv_filename IS NOT INITIAL.
       build_fullpath( ).
-    ELSEIF mv_fullpath IS INITIAL AND mv_name IS INITIAL.
+    ELSEIF mv_fullpath IS INITIAL AND mv_filename IS INITIAL.
       rv_subrc = 1024.
       RETURN.
     ENDIF.
@@ -176,8 +176,8 @@ CLASS zcl_filehandler_frontend IMPLEMENTATION.
     FIELD-SYMBOLS: <intfile> TYPE file_info,
                    <extfile> TYPE zst_basic_file_list.
 
-    IF iv_path IS NOT INITIAL.
-      lv_path = iv_path.
+    IF iv_dirpath IS NOT INITIAL.
+      lv_path = iv_dirpath.
     ELSE.
       lv_path = mv_path.
     ENDIF.
@@ -216,7 +216,7 @@ CLASS zcl_filehandler_frontend IMPLEMENTATION.
       CHECK iv_build_object = abap_true.
       CREATE OBJECT <extfile>-obj TYPE zcl_filehandler_frontend
         EXPORTING
-          iv_path = |{ iv_path && <extfile>-name }|.
+          iv_path = |{ iv_dirpath && <extfile>-name }|.
     ENDLOOP.
   ENDMETHOD.
 
@@ -314,8 +314,7 @@ CLASS zcl_filehandler_frontend IMPLEMENTATION.
 * | [<---] EV_LENGTH                      TYPE        INT4
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD read_file.
-    DATA: lv_filetype(10),
-          lv_codepage TYPE abap_encoding .
+    DATA: lv_filetype(10).
     FIELD-SYMBOLS: <table> TYPE table.
 
 * Content
@@ -394,8 +393,7 @@ CLASS zcl_filehandler_frontend IMPLEMENTATION.
 * | [--->] IV_BINSIZE                     TYPE        INT4(optional)
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD write_file.
-    DATA: lv_filetype(10),
-          lv_codepage TYPE abap_encoding .
+    DATA: lv_filetype(10).
 
     FIELD-SYMBOLS: <table> TYPE table.
 
