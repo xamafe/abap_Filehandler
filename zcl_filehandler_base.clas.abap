@@ -88,6 +88,11 @@ CREATE PUBLIC .
           ABSTRACT
       RETURNING
         VALUE(rv_os) TYPE sy-opsys .
+    METHODS get_physical_file IMPORTING iv_log_filename TYPE filename-fileintern
+                                        iv_param1       TYPE csequence
+                                        iv_param2       TYPE csequence
+                                        iv_param3       TYPE csequence
+                              RETURNING VALUE(rv_subrc) TYPE sy-subrc.
     METHODS get_physical_path
       IMPORTING
         !iv_logpath     TYPE filepath-pathintern
@@ -146,7 +151,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_filehandler_base IMPLEMENTATION.
+CLASS ZCL_FILEHANDLER_BASE IMPLEMENTATION.
 
 
   METHOD build_fullpath.
@@ -243,6 +248,41 @@ CLASS zcl_filehandler_base IMPLEMENTATION.
 
   METHOD get_fullpath.
     r_result = me->mv_fullpath.
+  ENDMETHOD.
+
+
+  METHOD get_physical_file.
+    DATA: lv_emergency TYPE c.
+
+    IF mv_destination = zcl_filehandler_frontend=>mc_destination_frontend.
+      DATA(lv_frontend) = abap_true.
+    ENDIF.
+
+    DATA(lv_os) = get_os( ).
+
+    CALL FUNCTION 'FILE_GET_NAME'
+      EXPORTING
+        logical_filename        = iv_log_filename
+        operating_system        = sy-opsys
+        parameter_1             = iv_param1
+        parameter_2             = iv_param2
+        parameter_3             = iv_param3
+        use_presentation_server = lv_frontend
+        with_file_extension     = abap_false
+        eleminate_blanks        = abap_false
+      IMPORTING
+        emergency_flag          = lv_emergency
+*       FILE_FORMAT             =
+        file_name               = mv_fullpath
+      EXCEPTIONS
+        file_not_found          = 1
+        OTHERS                  = 2.
+    IF sy-subrc <> 0 OR lv_emergency IS NOT INITIAL.
+      FREE: mv_fullpath.
+      rv_subrc = 8.
+    ELSE.
+      split_fullpath( ).
+    ENDIF.
   ENDMETHOD.
 
 
