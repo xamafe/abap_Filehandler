@@ -10,7 +10,7 @@ The ZCL_FILEHANDLER* classes were originally designed for a 7.30 Kernel and late
 The new classes are ZCL_FILE* .
 
 Next steps are:
-* Adapt new classes to 7.5X Syntax
+* Convert everything to 7.5X Syntax
 * Implement the (SAP Standard) Authorization
 * Implement a codepage conversion for both
 * (?)Implement FTP Access
