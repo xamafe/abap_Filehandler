@@ -1,59 +1,122 @@
-INTERFACE zif_file
-  PUBLIC .
-  CONSTANTS mc_loc_sapgui TYPE ze_file_location VALUE 'S'.
-  CONSTANTS mc_loc_appserver TYPE ze_file_location VALUE 'A'.
+interface ZIF_FILE
+  public .
 
-  CONSTANTS mc_filename_replace TYPE dxfilename VALUE '<FILENAME>'.
-  CONSTANTS mc_filetype_dir TYPE filetype   VALUE 'DIR'       .
-  CONSTANTS mc_filetype_file TYPE filetype   VALUE 'FILE'      .
 
-  METHODS copy_file IMPORTING !i_destination TYPE ze_file_location
-                              !i_path        TYPE csequence
-                    RETURNING VALUE(r_result) TYPE REF TO zif_file.
-  METHODS delete_file.
-  METHODS move_file IMPORTING !i_destination TYPE ze_file_location
-                              !i_path        TYPE csequence
-                    RETURNING VALUE(r_result) TYPE REF TO zif_file.
-  METHODS read_file IMPORTING !i_read_as_binary TYPE flag DEFAULT abap_false
-                    EXPORTING !ev_binary_length TYPE int4 .
-  METHODS write_file IMPORTING i_write_as_binary TYPE flag OPTIONAL
-                               i_binsize         TYPE int4 OPTIONAL.
+  constants MC_LOC_SAPGUI type ZE_FILE_LOCATION value 'S' ##NO_TEXT.
+  constants MC_LOC_APPSERVER type ZE_FILE_LOCATION value 'A' ##NO_TEXT.
+  constants MC_FILENAME_REPLACE type DXFILENAME value '<FILENAME>' ##NO_TEXT.
+  constants MC_FILETYPE_DIR type FILETYPE value 'DIR' ##NO_TEXT.
+  constants MC_FILETYPE_FILE type FILETYPE value 'FILE' ##NO_TEXT.
 
-  METHODS get_full_path RETURNING VALUE(r_result) TYPE string.
-  METHODS set_full_path IMPORTING i_full_path TYPE string.
-  METHODS get_directory_content
-    IMPORTING
-      i_only_subdir     TYPE flag DEFAULT abap_false
-      i_only_files      TYPE flag DEFAULT abap_false
-      i_build_object    TYPE flag DEFAULT abap_false
-      i_append_rettable TYPE flag DEFAULT abap_false
-    RETURNING
-      VALUE(r_result)   TYPE ztt_basic_file_list.
-  METHODS get_filesize RETURNING VALUE(r_result) TYPE i.
-  METHODS set_filesize IMPORTING i_m_filesize TYPE i.
-  METHODS get_operating_system RETURNING VALUE(r_result) TYPE sy-opsys.
-  METHODS set_operating_system IMPORTING i_operating_system TYPE sy-opsys.
-  METHODS set_fullpath_by_logic_filename IMPORTING i_log_filename  TYPE filename-fileintern
-                                                   i_param1        TYPE csequence
-                                                   i_param2        TYPE csequence
-                                                   i_param3        TYPE csequence
-                                         RETURNING VALUE(r_result) TYPE sy-subrc.
-  METHODS set_fullpath_by_logic_path IMPORTING i_logpath       TYPE filepath-pathintern
-                                     RETURNING VALUE(r_result) TYPE sy-subrc .
-  METHODS get_directory_seperator RETURNING VALUE(r_result) TYPE char01.
-  METHODS get_encoding RETURNING VALUE(r_result) TYPE abap_encoding.
-  METHODS set_encoding IMPORTING i_encoding TYPE abap_encoding.
-  METHODS set_file_extension IMPORTING i_file_extension TYPE string.
-  METHODS get_file_extension RETURNING VALUE(r_result) TYPE string.
-  METHODS set_filename IMPORTING i_filename TYPE string.
-  METHODS get_filename RETURNING VALUE(r_result) TYPE string.
-  METHODS set_directory IMPORTING i_directory TYPE string.
-  METHODS get_directory RETURNING VALUE(r_result) TYPE string.
-  METHODS: get_content RETURNING value(r_result) TYPE REF TO data,
-           set_content IMPORTING i_content TYPE REF TO data,
-           get_file_is_binary RETURNING value(r_result) TYPE abap_bool,
-           set_file_is_binary IMPORTING i_file_is_binary TYPE abap_bool,
-           get_m_location RETURNING value(r_result) TYPE ze_file_location,
-           set_m_location IMPORTING i_m_location TYPE ze_file_location.
-
-ENDINTERFACE.
+  methods COPY_FILE
+    importing
+      !I_DESTINATION type ZE_FILE_LOCATION
+      !I_PATH type CSEQUENCE
+    returning
+      value(R_RESULT) type ref to ZIF_FILE .
+  methods DELETE_FILE
+    returning
+      value(R_RESULT) type SY-SUBRC
+    raising
+      CX_SY_FILE_AUTHORITY
+      CX_SY_FILE_OPEN .
+  methods GET_CONTENT
+    returning
+      value(R_RESULT) type ref to DATA .
+  methods GET_DIRECTORY
+    returning
+      value(R_RESULT) type STRING .
+  methods GET_DIRECTORY_CONTENT
+    importing
+      !I_ONLY_SUBDIR type FLAG default ABAP_FALSE
+      !I_ONLY_FILES type FLAG default ABAP_FALSE
+      !I_BUILD_OBJECT type FLAG default ABAP_FALSE
+      !I_APPEND_RETTABLE type FLAG default ABAP_FALSE
+    returning
+      value(R_RESULT) type ZTT_BASIC_FILE_LIST .
+  methods GET_DIRECTORY_SEPERATOR
+    returning
+      value(R_RESULT) type CHAR01 .
+  methods GET_ENCODING
+    returning
+      value(R_RESULT) type ABAP_ENCODING .
+  methods GET_FILENAME
+    returning
+      value(R_RESULT) type STRING .
+  methods GET_FILESIZE
+    returning
+      value(R_RESULT) type I .
+  methods GET_FILE_EXTENSION
+    returning
+      value(R_RESULT) type STRING .
+  methods GET_FILE_IS_BINARY
+    returning
+      value(R_RESULT) type ABAP_BOOL .
+  methods GET_FULL_PATH
+    returning
+      value(R_RESULT) type STRING .
+  methods GET_M_LOCATION
+    returning
+      value(R_RESULT) type ZE_FILE_LOCATION .
+  methods GET_OPERATING_SYSTEM
+    returning
+      value(R_RESULT) type SY-OPSYS .
+  methods MOVE_FILE
+    importing
+      !I_DESTINATION type ZE_FILE_LOCATION
+      !I_PATH type CSEQUENCE
+    returning
+      value(R_RESULT) type ref to ZIF_FILE .
+  methods READ_FILE
+    importing
+      !I_READ_AS_BINARY type FLAG default ABAP_FALSE
+    exporting
+      !E_FILE_LENGTH type INT4 .
+  methods SET_CONTENT
+    importing
+      !I_CONTENT type ref to DATA .
+  methods SET_DIRECTORY
+    importing
+      !I_DIRECTORY type STRING .
+  methods SET_ENCODING
+    importing
+      !I_ENCODING type ABAP_ENCODING .
+  methods SET_FILENAME
+    importing
+      !I_FILENAME type STRING .
+  methods SET_FILESIZE
+    importing
+      !I_M_FILESIZE type I .
+  methods SET_FILE_EXTENSION
+    importing
+      !I_FILE_EXTENSION type STRING .
+  methods SET_FILE_IS_BINARY
+    importing
+      !I_FILE_IS_BINARY type ABAP_BOOL .
+  methods SET_FULLPATH_BY_LOGIC_FILENAME
+    importing
+      !I_LOG_FILENAME type FILENAME-FILEINTERN
+      !I_PARAM1 type CSEQUENCE
+      !I_PARAM2 type CSEQUENCE
+      !I_PARAM3 type CSEQUENCE
+    returning
+      value(R_RESULT) type SY-SUBRC .
+  methods SET_FULLPATH_BY_LOGIC_PATH
+    importing
+      !I_LOGPATH type FILEPATH-PATHINTERN
+    returning
+      value(R_RESULT) type SY-SUBRC .
+  methods SET_FULL_PATH
+    importing
+      !I_FULL_PATH type STRING .
+  methods SET_M_LOCATION
+    importing
+      !I_M_LOCATION type ZE_FILE_LOCATION .
+  methods SET_OPERATING_SYSTEM
+    importing
+      !I_OPERATING_SYSTEM type SY-OPSYS .
+  methods WRITE_FILE
+    importing
+      !I_WRITE_AS_BINARY type FLAG optional
+      !I_BINSIZE type INT4 optional .
+endinterface.

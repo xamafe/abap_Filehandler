@@ -13,7 +13,20 @@ CLASS zcl_file__base DEFINITION
       read_file
       write_file .
 
+    CONSTANTS c_os_windows TYPE sy-opsys VALUE 'Windows NT'.
+    CONSTANTS c_os_linux   TYPE sy-opsys VALUE 'Linux'.
+    CONSTANTS c_os_hpux    TYPE sy-opsys VALUE 'HP-UX'.
+    CONSTANTS c_os_os400   TYPE sy-opsys VALUE 'OS400'.
+
+    CONSTANTS c_pathseperator_windows TYPE c LENGTH 1 VALUE '\'.
+    CONSTANTS c_pathseperator_other   TYPE c LENGTH 1 VALUE '/'.
+
+    CONSTANTS c_root_windows TYPE c LENGTH 3 VALUE 'C:\'.
+    CONSTANTS c_root_linux   TYPE c LENGTH 3 VALUE '/'.
+
   PROTECTED SECTION.
+    METHODS add_length_to_filesize IMPORTING i_fileline TYPE any.
+    METHODS create_content_table.
 
   PRIVATE SECTION.
     DATA m_content TYPE REF TO data.
@@ -252,7 +265,6 @@ CLASS zcl_file__base IMPLEMENTATION.
     m_full_path = i_full_path.
   ENDMETHOD.
 
-
   METHOD zif_file~set_operating_system.
     me->m_operating_system = i_operating_system.
   ENDMETHOD.
@@ -265,35 +277,47 @@ CLASS zcl_file__base IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD split_fullpath_into_parts.
-    DATA: lv_sep(2),
-          lv_regex TYPE string.
+    DATA: filesystem_seperator(2),
+          regex_statement TYPE string.
 
     CHECK m_full_path IS NOT INITIAL.
-    lv_sep = zif_file~get_directory_seperator( ).
+    filesystem_seperator = zif_file~get_directory_seperator( ).
 
-    IF lv_sep = '\'.
-      lv_sep = '\\'.
+    IF filesystem_seperator = c_pathseperator_windows.
+      filesystem_seperator = `\` && c_pathseperator_windows. "REGEX-escape + seperator = \\
     ENDIF.
 
-    lv_regex = '(.*)' && lv_sep && '(.*)\.(.*)$'.
-    CONDENSE lv_regex.
+    regex_statement = condense( `(.*)` && filesystem_seperator && `(.*)\.(.*)$` ).
 *   All at once, if in correct order
-    FIND FIRST OCCURRENCE OF REGEX lv_regex IN m_full_path SUBMATCHES m_directory m_filename m_file_extension.
+    FIND FIRST OCCURRENCE OF REGEX regex_statement IN m_full_path SUBMATCHES m_directory m_filename m_file_extension.
     CHECK sy-subrc <> 0.
 
     IF m_full_path CA '\/'.
-      CLEAR lv_regex.
-      lv_regex = '(.*)' && lv_sep && '(.*)'.
-      CONDENSE lv_regex.
-      FIND FIRST OCCURRENCE OF REGEX lv_regex IN m_full_path SUBMATCHES m_directory m_filename.
+      regex_statement = condense( '(.*)' && filesystem_seperator && '(.*)' ).
+      FIND FIRST OCCURRENCE OF REGEX regex_statement IN m_full_path SUBMATCHES m_directory m_filename.
       CHECK sy-subrc <> 0.
     ELSEIF m_full_path CA '.'.
-      CLEAR lv_regex.
-      lv_regex = '(.*)\.(.*)$'.
-      FIND FIRST OCCURRENCE OF REGEX lv_regex IN m_full_path SUBMATCHES m_directory.
+      regex_statement = '(.*)\.(.*)$'.
+      FIND FIRST OCCURRENCE OF REGEX regex_statement IN m_full_path SUBMATCHES m_directory.
       CHECK sy-subrc <> 0.
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD create_content_table.
+    IF zif_file~get_file_is_binary( ) = abap_true.
+      CREATE DATA m_content TYPE ztt_xfilecontent.
+    ELSE.
+      CREATE DATA m_content TYPE ztt_filecontent.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD add_length_to_filesize.
+    IF zif_file~get_file_is_binary( ) = abap_true.
+      m_filesize = m_filesize + xstrlen( i_fileline ).
+    ELSE.
+      m_filesize = m_filesize + strlen( i_fileline ).
+    ENDIF.
   ENDMETHOD.
 
 ENDCLASS.
